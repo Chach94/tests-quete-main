@@ -25,6 +25,8 @@ async findBook(@Arg("id") id: string) {
     return newBook;
   }
 
+  
+
   @Authorized(["ADMIN"])
   @Mutation(() => Book)
   async deleteBook(@Arg("id") id: string) {

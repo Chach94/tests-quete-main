@@ -1,5 +1,5 @@
 import assert from "assert";
-import Book from "../src/entities/book.entity";
+import Book, { InputCreateBook } from "../src/entities/book.entity";
 import BookResolver from "../src/resolvers/book.resolver";
 import {
     IMockStore,
@@ -18,9 +18,34 @@ export const LIST_BOOKS = `#graphql
         }
     }
 `;
+export const CREATE_BOOK = `#graphql
+    mutation CreateBook($infos: InputCreateBook!) {
+        createBook(infos: $infos) {
+            id
+            title
+        }
+    }
+`;
+export const FIND_BOOK_BY_ID = `#graphql
+    query FindBook($findBookId: String!) {
+        findBook(id: $findBookId) {
+            id
+            title
+        }
+    }
+`;
+
 type ResponseData = {
     books: Book[];
   };
+  type ResponseDataCreate = {
+    createBook: Book;
+  };
+
+  type ResponseOneBookData = {
+    findBook: Book;
+  };
+  
 
 const booksData: Book[] = [
   { id: "1", title: "Mon Livre 1" },
@@ -47,13 +72,23 @@ beforeAll(async () => {
       books() {
         return store.get("Query", "ROOT", "books");
       },
+      findBook(_: null, { id }: { id: string }) {
+        return store.get("Book", id);
+      },
     },
+    Mutation: {
+        createBook: (_: null, { infos }: { infos: InputCreateBook }) => {
+          store.set("Book", "3", infos); // je stocke le livre avec l'id 3 et les infos reçues
+          return store.get("Book", "3"); //je retourne le livre stocké dans le store
+        },
+      },
   });
 
   server = new ApolloServer({
     schema: addMocksToSchema({
       schema: baseSchema,
       store,
+      resolvers,
     }),
   });
 
@@ -72,4 +107,38 @@ describe("Test sur les livres", () => {
         books: [{ id: "1" }, { id: "2" }],
       });
     });
+    it("Création d'un livre et stockage dans le store", async () => {
+        const response = await server.executeOperation<ResponseDataCreate>({
+          query: CREATE_BOOK,
+          variables: {
+                infos: {
+                    title: "Mon livre 3"
+                },
+          },
+        });
+        assert(response.body.kind === "single");
+        expect(response.body.singleResult.data).toEqual({
+          createBook: {
+            id: "3",
+            title: "Mon livre 3",
+          },
+        });
+        
+      });
+      it("Récupération d'un livre depuis le store après l'ajout d'un troisième", async () => {
+        const response = await server.executeOperation<ResponseData>({
+          query: FIND_BOOK_BY_ID,
+          variables: {
+            findBookId: "3",
+          },
+        });
+    
+        assert(response.body.kind === "single");
+        expect(response.body.singleResult.data).toEqual({
+          findBook: {
+            id: "3",
+            title: "Mon livre 3",
+          },
+        });
+      });
   });
