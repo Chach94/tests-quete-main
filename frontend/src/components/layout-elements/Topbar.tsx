@@ -12,6 +12,7 @@ function Topbar() {
     const email = Cookies.get("email") ?? "";
     const role = Cookies.get("role") ?? "USER";
     setState({ email, role });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [Cookies.get("email"), Cookies.get("role")]);
   return (
     <nav className="fixed inset-x-0 top-0 z-10 w-full px-4 py-1 bg-white shadow-md border-slate-500 dark:bg-[#0c1015] transition duration-700 ease-out">
@@ -34,6 +35,7 @@ function Topbar() {
           </Link>
           {state.role === "ADMIN" && (
             <Link
+            data-testid="admin-link"
               href="/admin/books"
               className="px-6 py-2 text-black transition duration-700 ease-out bg-white border border-black rounded-lg hover:bg-black hover:border hover:text-white dark:border-white dark:bg-inherit dark:text-white dark:hover:bg-white dark:hover:text-black"
             >
