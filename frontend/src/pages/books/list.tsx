@@ -1,3 +1,4 @@
+
 import { LIST_BOOKS } from "@/requetes/queries/books.queries";
 import { BooksQuery, BooksQueryVariables } from "@/types/graphql";
 import { useQuery } from "@apollo/client";
